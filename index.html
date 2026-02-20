@@ -2,220 +2,178 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dreamers - Share Your Dreams</title>
-<link rel="icon" href="logo.png">
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-analytics.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
-  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-storage.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyA-oYY7TrkutoUzT6TDyv-2zXYrv8jQ8Qk",
-    authDomain: "dreamers-28315.firebaseapp.com",
-    projectId: "dreamers-28315",
-    storageBucket: "dreamers-28315.firebasestorage.app",
-    messagingSenderId: "2129659896",
-    appId: "1:2129659896:web:5c9b6f0188a90085c6f80d",
-    measurementId: "G-6PEQFPTJ7N"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const storage = getStorage(app);
-  const provider = new GoogleAuthProvider();
-
-  // Connexion Google
-  window.loginGoogle = async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      console.log("Connecté:", user.displayName);
-    } catch (err) { alert("Erreur: " + err.message); }
-  };
-
-  // Déconnexion
-  window.logout = async () => {
-    await signOut(auth);
-    document.getElementById('login-section').style.display = 'block';
-    document.getElementById('profile-section').style.display = 'none';
-  };
-
-  // Modifier profil
-  window.updateProfileInfo = async () => {
-    const name = document.getElementById('edit-name').value;
-    const fileInput = document.getElementById('edit-photo');
-    let photoURL = auth.currentUser.photoURL;
-
-    if(fileInput.files.length > 0){
-      const file = fileInput.files[0];
-      const storageRef = ref(storage, 'users/' + auth.currentUser.uid + '_' + Date.now());
-      await uploadBytes(storageRef, file);
-      photoURL = await getDownloadURL(storageRef);
-    }
-
-    await updateProfile(auth.currentUser, { displayName: name, photoURL });
-    document.getElementById('profile-name').innerText = auth.currentUser.displayName;
-    document.getElementById('profile-photo').src = auth.currentUser.photoURL;
-  };
-
-  // Poster un rêve
-  window.postDream = async () => {
-    const dreamText = document.getElementById('dream-text').value;
-    const fileInput = document.getElementById('dream-image');
-    if (!dreamText) return alert("Écris ton rêve !");
-    let imageUrl = '';
-    if(fileInput.files.length > 0){
-      const file = fileInput.files[0];
-      const storageRef = ref(storage, 'dreams/' + Date.now() + "_" + file.name);
-      await uploadBytes(storageRef, file);
-      imageUrl = await getDownloadURL(storageRef);
-    }
-    await addDoc(collection(db, 'dreams'), {
-      text: dreamText,
-      image: imageUrl,
-      user: auth.currentUser.displayName,
-      photo: auth.currentUser.photoURL,
-      uid: auth.currentUser.uid,
-      likes: 0,
-      createdAt: new Date()
-    });
-    document.getElementById('dream-text').value = '';
-    document.getElementById('dream-image').value = '';
-    alert("Ton rêve a été posté 🌟"); // notification
-  };
-
-  // Like un rêve
-  window.likeDream = async (id) => {
-    const docRef = doc(db, 'dreams', id);
-    await updateDoc(docRef, { likes: increment(1) });
-  };
-
-  // Auth state
-  onAuthStateChanged(auth, user => {
-    if(user){
-      document.getElementById('login-section').style.display = 'none';
-      document.getElementById('profile-section').style.display = 'block';
-      document.getElementById('profile-name').innerText = user.displayName;
-      document.getElementById('profile-photo').src = user.photoURL;
-    } else {
-      document.getElementById('login-section').style.display = 'block';
-      document.getElementById('profile-section').style.display = 'none';
-    }
-  });
-
-  // Afficher les rêves
-  const dreamList = document.getElementById('dream-list');
-  const q = query(collection(db, 'dreams'), orderBy('createdAt','desc'));
-  onSnapshot(q, (snapshot) => {
-    dreamList.innerHTML = '';
-    snapshot.forEach(docItem => {
-      const data = docItem.data();
-      const div = document.createElement('div');
-      div.className = 'dream-card';
-      div.innerHTML = `
-        <img src="${data.photo}" class="user-photo">
-        <h4>${data.user}</h4>
-        <p>${data.text}</p>
-        ${data.image ? `<img src="${data.image}" class="dream-image">` : ''}
-        <div class="dream-actions">
-          <button onclick="likeDream('${docItem.id}')">❤️ ${data.likes || 0}</button>
-          <a href="https://wa.me/?text=${encodeURIComponent(data.text)}" target="_blank">🔗 Partager</a>
-        </div>
-      `;
-      dreamList.appendChild(div);
-    });
-  });
-</script>
-
+<title>Bulletin de Trimestre</title>
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#0a1f2c;color:#f0f0f0;}
-header{text-align:center;padding:40px 20px;background:#004d40;color:#00c2a0;box-shadow:0 5px 10px rgba(0,0,0,0.5);}
-header h1{margin:0;font-size:3em;}
-header p{margin:10px 0;font-size:1.2em;color:#a0f0e0;}
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #e0f7ff;
+    margin: 20px;
+}
 
-nav{display:flex;justify-content:center;gap:20px;background:#00332f;padding:15px;position:sticky;top:0;z-index:100;}
-nav a{color:#00c2a0;text-decoration:none;font-weight:bold;padding:10px 20px;border-radius:50px;transition:0.3s;background:#004d40;}
-nav a:hover{background:#00e0b0;color:#004d40;}
+h1 { text-align: center; color: #1e3d7b; }
 
-#login-section{text-align:center;padding:50px;}
-#login-section button{background:#00c2a0;border:none;padding:15px 30px;border-radius:50px;color:#004d40;font-weight:bold;cursor:pointer;transition:0.3s;}
-#login-section button:hover{background:#00e0b0;transform:scale(1.05);}
+label { display: block; margin: 8px 0; }
 
-#profile-section{display:none;text-align:center;padding:30px;}
-#profile-photo{width:80px;height:80px;border-radius:50%;}
-#dream-input{margin-top:20px;display:flex;flex-direction:column;align-items:center;gap:10px;}
-#dream-input textarea{width:300px;height:80px;border-radius:10px;padding:10px;resize:none;}
-#dream-input input[type=file]{color:#fff;}
-#dream-input button{background:#00c2a0;border:none;padding:10px 20px;border-radius:50px;font-weight:bold;cursor:pointer;transition:0.3s;}
-#dream-input button:hover{background:#00e0b0;transform:scale(1.05);}
+input, select {
+    padding: 4px; margin-left: 5px; width: 60px;
+    border-radius: 4px; border: 1px solid #ccc;
+}
 
-#edit-profile{margin:20px;display:flex;flex-direction:column;align-items:center;gap:10px;}
-#edit-profile input[type=text], #edit-profile input[type=file]{width:250px;padding:8px;border-radius:10px;}
+button {
+    margin-top: 20px; padding: 10px 25px;
+    background-color: #1e3d7b; color: white; border: none;
+    border-radius: 6px; cursor: pointer; font-weight: bold;
+}
+button:hover { background-color: #3a5bbf; }
 
-#dream-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;padding:20px;}
-.dream-card{background:#004d40;border-radius:15px;padding:15px;text-align:center;box-shadow:0 5px 15px rgba(0,0,0,0.5);transition:0.3s;}
-.dream-card:hover{transform:translateY(-5px) scale(1.02);box-shadow:0 10px 20px rgba(0,0,0,0.7);}
-.dream-card h4{margin:10px 0 5px;color:#00e0b0;}
-.dream-card p{color:#f0f0f0;}
-.dream-card .dream-image{width:100%;border-radius:10px;margin-top:10px;}
-.dream-card .user-photo{width:50px;height:50px;border-radius:50%;}
-.dream-actions{margin-top:10px;}
-.dream-actions button{background:#00c2a0;color:#004d40;border:none;padding:5px 10px;border-radius:50px;margin-right:5px;cursor:pointer;transition:0.3s;}
-.dream-actions button:hover{background:#00e0b0;}
+#bulletinDisplay {
+    display: none; margin-top: 25px; padding: 25px;
+    width: 750px; background-color: #ffffff;
+    border-radius: 12px; border: 2px solid #1e3d7b;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
 
-footer{text-align:center;padding:25px;background:#00332f;color:#00c2a0;}
+#bulletinDisplay h2 {
+    text-align: center; color: #1e3d7b; text-decoration: underline; margin-bottom: 20px;
+}
+
+table { width: 100%; border-collapse: collapse; }
+th, td { border: 1px solid #1e3d7b; padding: 8px; text-align: center; }
+th { background-color: #1e3d7b; color: white; }
+tr:nth-child(even) { background-color: #e6f0ff; }
+
+.signature { margin-top: 25px; text-align: right; font-style: italic; font-size: 1.1em; color: #1e3d7b; }
+.mention { margin-top: 15px; font-size: 1.2em; font-weight: bold; color: #1e3d7b; text-align: center; }
+.moyenne-generale { margin-top: 15px; font-size: 1.2em; font-weight: bold; text-align: center; color: #1e3d7b; }
+.info { display: flex; justify-content: space-between; margin-top: 15px; font-weight: bold; }
 </style>
 </head>
 <body>
 
-<header>
-<h1>Dreamers</h1>
-<p>Share your dreams with the world 🌟</p>
-</header>
+<h1>Générateur de Bulletin de Trimestre</h1>
 
-<nav>
-<a href="#login-section">Connexion</a>
-<a href="#dream-list">Rêves</a>
-<a href="#profile-section">Profil</a>
-<a href="https://chat.whatsapp.com/EWxI8orHwge3Zj0wQxAkba" target="_blank">Communauté</a>
-</nav>
+<label>Nom de l'élève : <input type="text" id="nomEleve"></label>
+<label>Établissement : <input type="text" id="etablissement"></label>
+<label>Année scolaire : <input type="text" id="annee"></label>
 
-<!-- Connexion -->
-<section id="login-section">
-  <button onclick="loginGoogle()">Se connecter avec Google</button>
-</section>
+<label>Classe :
+  <select id="classe">
+    <option value="D">Terminale D</option>
+    <option value="A4">Terminale A4</option>
+  </select>
+</label>
 
-<!-- Profil -->
-<section id="profile-section">
-  <img id="profile-photo" src="">
-  <h3 id="profile-name"></h3>
+<div id="notesContainer"></div>
 
-  <div id="edit-profile">
-    <input type="text" id="edit-name" placeholder="Modifier pseudo">
-    <input type="file" id="edit-photo" accept="image/*">
-    <button onclick="updateProfileInfo()">Mettre à jour profil</button>
-  </div>
+<button onclick="genererBulletin()">Délivrer le bulletin</button>
+<button id="downloadBtn" style="display:none;">Télécharger le bulletin (PDF)</button>
 
-  <div id="dream-input">
-    <textarea id="dream-text" placeholder="Écris ton rêve ici..."></textarea>
-    <input type="file" id="dream-image" accept="image/*">
-    <button onclick="postDream()">Poster ton rêve</button>
-    <button onclick="logout()">Déconnexion</button>
-  </div>
-</section>
+<div id="bulletinDisplay"></div>
 
-<!-- Feed -->
-<section id="dream-list"></section>
+<!-- Librairies pour générer PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-<footer>
-&copy; 2026 Dreamers. Tous droits réservés.
-</footer>
+<script>
+const matieres = {
+  "D": { "Maths":3, "Physique":3, "SVT":4, "Anglais":2, "Français":2, "Histoire-Géo":2, "Philosophie":2, "Sport":1 },
+  "A4": { "Philosophie":4, "SVT":1, "Allemand":2, "Anglais":3, "Français":3, "Histoire-Géo":3, "Maths":2, "Physique":2 }
+};
+
+function genererChamps() {
+  const container = document.getElementById("notesContainer");
+  container.innerHTML = "<h3>Remplir les notes (0-20)</h3>";
+  const classe = document.getElementById("classe").value;
+  for (let matiere in matieres[classe]) {
+    container.innerHTML += `<label>${matiere} : 
+        Interro <input type="number" id="${matiere}_I" min="0" max="20"> 
+        Devoir <input type="number" id="${matiere}_D" min="0" max="20"> 
+        Composition <input type="number" id="${matiere}_C" min="0" max="20">
+    </label>`;
+  }
+}
+document.getElementById("classe").addEventListener("change", genererChamps);
+window.onload = genererChamps;
+
+function calculerMention(moy) {
+    if (moy >= 16) return "Très Bien";
+    else if (moy >= 14) return "Bien";
+    else if (moy >= 12) return "Assez Bien";
+    else if (moy >= 10) return "Passable";
+    else return "Insuffisant";
+}
+
+function genererBulletin() {
+  const classe = document.getElementById("classe").value;
+  let totalPoints = 0;
+  let totalCoeff = 0;
+  let rows = "";
+
+  for (let matiere in matieres[classe]) {
+    const noteI = parseFloat(document.getElementById(`${matiere}_I`).value) || 0;
+    const noteD = parseFloat(document.getElementById(`${matiere}_D`).value) || 0;
+    const noteC = parseFloat(document.getElementById(`${matiere}_C`).value) || 0;
+
+    const moyenneMatiere = (noteI + noteD + noteC) / 3;
+    const coeff = matieres[classe][matiere];
+
+    totalPoints += moyenneMatiere * coeff;
+    totalCoeff += coeff;
+
+    rows += `<tr>
+      <td>${matiere}</td>
+      <td>${noteI.toFixed(1)}</td>
+      <td>${noteD.toFixed(1)}</td>
+      <td>${noteC.toFixed(1)}</td>
+      <td>${moyenneMatiere.toFixed(2)}</td>
+    </tr>`;
+  }
+
+  const moyenneGenerale = (totalPoints / totalCoeff).toFixed(2);
+  const mention = calculerMention(moyenneGenerale);
+
+  const bulletinHTML = `
+    <h2>Bulletin de Trimestre</h2>
+    <div class="info">
+      <span><strong>Élève :</strong> ${document.getElementById("nomEleve").value}</span>
+      <span><strong>Établissement :</strong> ${document.getElementById("etablissement").value}</span>
+      <span><strong>Année :</strong> ${document.getElementById("annee").value}</span>
+    </div>
+    <table>
+      <tr>
+        <th>Matière</th>
+        <th>Interrogation</th>
+        <th>Devoir</th>
+        <th>Composition</th>
+        <th>Moyenne</th>
+      </tr>
+      ${rows}
+    </table>
+    <div class="moyenne-generale">Moyenne Générale : ${moyenneGenerale}</div>
+    <div class="mention">Mention : ${mention}</div>
+    <div class="signature">Signé : Rio</div>
+  `;
+  const display = document.getElementById("bulletinDisplay");
+  display.style.display = "block";
+  display.innerHTML = bulletinHTML;
+
+  document.getElementById("downloadBtn").style.display = "inline-block";
+}
+
+// Télécharger en PDF
+document.getElementById("downloadBtn").addEventListener("click", () => {
+  const { jsPDF } = window.jspdf;
+  const bulletin = document.getElementById("bulletinDisplay");
+  html2canvas(bulletin).then(canvas => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'pt', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save('Bulletin.pdf');
+  });
+});
+</script>
 
 </body>
 </html>
